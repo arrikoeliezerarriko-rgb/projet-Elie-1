@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; script-src 'self'" />
   <link rel="stylesheet" href="styles.css" />
   <script defer src="script.js"></script>
 </head>
@@ -61,7 +64,7 @@
 
         <label class="search-bar" aria-label="Rechercher un document">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.1 11.56l4.42 4.42 1.41-1.41-4.42-4.42A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"/></svg>
-          <input id="document-search" type="search" placeholder="Rechercher un cours, un TD ou un professeur..." />
+          <input id="document-search" type="search" placeholder="Rechercher un cours, un TD ou un professeur..." maxlength="200" />
         </label>
 
         <div class="topbar-actions">
@@ -368,11 +371,11 @@
           <form class="login-form">
             <label>
               <span>Adresse e-mail</span>
-              <input type="email" placeholder="delegue@universite.edu" />
+              <input type="email" placeholder="email@universite.edu" required maxlength="100" />
             </label>
             <label>
               <span>Mot de passe</span>
-              <input type="password" placeholder="••••••••" />
+              <input type="password" placeholder="••••••••" required minlength="6" maxlength="128" />
             </label>
             <div class="login-form-row">
               <label class="checkbox-field">
