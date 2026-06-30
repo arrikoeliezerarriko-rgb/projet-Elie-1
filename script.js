@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  /**
+   * SCRIPT.JS — Main portal (index.html) interactions.
+   * Uses PortailUtils for search/filtering, validation, and sanitization.
+   */
   var utils = typeof require === 'function' ? require('./src/utils') : window.PortailUtils;
 
   function initMobileMenu() {
@@ -33,12 +37,32 @@
         var title = row.getAttribute('data-title') || '';
         row.style.display = filteredTitles.includes(title) ? '' : 'none';
       });
+      filterSubjectCards(query);
     }, 250);
 
     searchInput.addEventListener('input', debouncedFilter);
   }
 
-  function initModal() {
+  function filterSubjectCards(query) {
+    var cards = document.querySelectorAll('.subject-card');
+    cards.forEach(function (card) {
+      if (!query || query.trim() === '') {
+        card.classList.remove('search-match', 'search-hidden');
+        return;
+      }
+      var subject = card.getAttribute('data-subject') || '';
+      var normalizedQuery = utils.normalizeText(query);
+      if (utils.normalizeText(subject).includes(normalizedQuery)) {
+        card.classList.add('search-match');
+        card.classList.remove('search-hidden');
+      } else {
+        card.classList.remove('search-match');
+        card.classList.add('search-hidden');
+      }
+    });
+  }
+
+  function initDelegateModal() {
     var modal = document.getElementById('delegate-modal');
     if (!modal) return;
 
@@ -88,24 +112,20 @@
           showToast(result.errors[0], 'error');
           return;
         }
+
         showToast('Connexion simulée avec succès !', 'success');
         closeModal();
-        setTimeout(function () {
-          window.location.href = 'espace-delegue.html';
-        }, 1000);
+        setTimeout(function () { window.location.href = 'espace-delegue.html'; }, 1000);
       });
     }
   }
 
-  function initFileUpload() {
+  function initUploadTrigger() {
     var uploadBtn = document.getElementById('upload-trigger-button');
     var fileInput = document.getElementById('file-upload-input');
     if (!uploadBtn || !fileInput) return;
 
-    uploadBtn.addEventListener('click', function () {
-      fileInput.click();
-    });
-
+    uploadBtn.addEventListener('click', function () { fileInput.click(); });
     fileInput.addEventListener('change', function () {
       if (!fileInput.files || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
@@ -115,6 +135,23 @@
         return;
       }
       showToast('Fichier "' + utils.sanitizeInput(file.name) + '" sélectionné (' + utils.formatFileSize(file.size) + ').', 'success');
+    });
+  }
+
+  function initHelpButton() {
+    var helpBtn = document.getElementById('help-contact-button');
+    if (helpBtn) {
+      helpBtn.addEventListener('click', function () {
+        showToast('Un message a été envoyé au délégué.', 'success');
+      });
+    }
+  }
+
+  function initNotifications() {
+    var notifBtn = document.querySelector('.notification-button');
+    if (!notifBtn) return;
+    notifBtn.addEventListener('click', function () {
+      showToast('Aucune nouvelle notification.', 'info');
     });
   }
 
@@ -128,19 +165,12 @@
     }, 3500);
   }
 
-  function initNotifications() {
-    var notifBtn = document.querySelector('.notification-button');
-    if (!notifBtn) return;
-    notifBtn.addEventListener('click', function () {
-      showToast('Aucune nouvelle notification.', 'info');
-    });
-  }
-
   function init() {
     initMobileMenu();
     initSearch();
-    initModal();
-    initFileUpload();
+    initDelegateModal();
+    initUploadTrigger();
+    initHelpButton();
     initNotifications();
   }
 
@@ -156,8 +186,8 @@
     module.exports = {
       initMobileMenu: initMobileMenu,
       initSearch: initSearch,
-      initModal: initModal,
-      initFileUpload: initFileUpload,
+      initModal: initDelegateModal,
+      initFileUpload: initUploadTrigger,
       initNotifications: initNotifications,
       showToast: showToast,
       init: init,

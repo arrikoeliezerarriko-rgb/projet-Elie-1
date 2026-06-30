@@ -1,7 +1,31 @@
 (function () {
   'use strict';
 
+  /**
+   * DASHBOARD.JS — Uses SharedComponents (when available) to render the
+   * dashboard page, then wires up interactive behaviors via shared utilities.
+   * Falls back to attaching behaviors directly when DOM is pre-rendered (tests).
+   */
   var utils = typeof require === 'function' ? require('./src/utils') : window.PortailUtils;
+
+  function renderComponents() {
+    var SC = typeof SharedComponents !== 'undefined' ? SharedComponents : null;
+    if (!SC) return;
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar && !sidebar.hasChildNodes()) {
+      SC.renderSidebar(sidebar);
+      SC.renderTopbar(document.getElementById('topbar'), { logoutId: 'logout' });
+      SC.renderHeroCard(document.getElementById('dashboard'));
+      SC.renderStatsGrid(document.getElementById('stats-grid'));
+      SC.renderDocumentForm(document.getElementById('add-document'));
+      SC.renderAnnouncementsPanel(document.getElementById('announcements'));
+      SC.renderActivityPanel(document.getElementById('activity-panel'));
+      SC.renderDocumentsTable(document.getElementById('my-documents'));
+      SC.renderStatisticsPanel(document.getElementById('statistics'));
+      SC.renderSubjectsGrid(document.getElementById('subjects'));
+      SC.renderSettingsGrid(document.getElementById('settings'));
+    }
+  }
 
   function initSidebar() {
     var toggle = document.getElementById('menu-toggle');
@@ -159,14 +183,35 @@
   function initLogout() {
     var logoutBtn = document.getElementById('logout');
     if (!logoutBtn) return;
-
-    logoutBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      showToast('Déconnexion...', 'info');
-      setTimeout(function () {
-        window.location.href = 'index.html';
-      }, 800);
+    logoutBtn.addEventListener('click', function () {
+      showToast('Déconnexion réussie.', 'success');
+      setTimeout(function () { window.location.href = 'index.html'; }, 1200);
     });
+  }
+
+  function initNotifyButton() {
+    var notifyBtn = document.getElementById('notify-button');
+    if (!notifyBtn) return;
+    notifyBtn.addEventListener('click', function () {
+      showToast('Aucune nouvelle notification.', 'info');
+    });
+  }
+
+  function initScrollButtons() {
+    var openUpload = document.getElementById('open-upload');
+    if (openUpload) {
+      openUpload.addEventListener('click', function () {
+        var target = document.getElementById('add-document');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+    var openAnnouncement = document.getElementById('open-announcement');
+    if (openAnnouncement) {
+      openAnnouncement.addEventListener('click', function () {
+        var target = document.getElementById('announcements');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
   }
 
   function showToast(message, type) {
@@ -182,24 +227,19 @@
     toast.className = 'toast ' + (type || 'info') + ' show';
     setTimeout(function () {
       toast.classList.remove('show');
-    }, 3500);
+    }, 3000);
   }
 
   function init() {
+    renderComponents();
     initSidebar();
     initSearch();
     initDropzone();
     initFilterChips();
     initPublishButton();
     initLogout();
-  }
-
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
+    initNotifyButton();
+    initScrollButtons();
   }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -213,5 +253,11 @@
       showToast: showToast,
       init: init,
     };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
