@@ -43,9 +43,7 @@
     if (!modal) return;
 
     var closeBtn = modal.querySelector('.modal-close-button');
-    var submitBtn = document.getElementById('delegate-submit-button');
     var helpBtn = document.getElementById('help-contact-button');
-    var delegateLinks = document.querySelectorAll('a[href="espace-delegue.html"]');
 
     function openModal() {
       modal.setAttribute('aria-hidden', 'false');
@@ -59,62 +57,10 @@
 
     if (helpBtn) helpBtn.addEventListener('click', openModal);
 
-    delegateLinks.forEach(function (link) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        openModal();
-      });
-    });
-
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
     modal.addEventListener('click', function (e) {
       if (e.target === modal) closeModal();
-    });
-
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function () {
-        var emailInput = modal.querySelector('input[type="email"]');
-        var passwordInput = modal.querySelector('input[type="password"]');
-        var email = emailInput ? emailInput.value : '';
-        var password = passwordInput ? passwordInput.value : '';
-
-        if (!utils.validateEmail(email)) {
-          showToast('Veuillez saisir une adresse e-mail valide.', 'error');
-          return;
-        }
-        var result = utils.validateLoginForm(email, password);
-        if (!result.valid) {
-          showToast(result.errors[0], 'error');
-          return;
-        }
-        showToast('Connexion simulée avec succès !', 'success');
-        closeModal();
-        setTimeout(function () {
-          window.location.href = 'espace-delegue.html';
-        }, 1000);
-      });
-    }
-  }
-
-  function initFileUpload() {
-    var uploadBtn = document.getElementById('upload-trigger-button');
-    var fileInput = document.getElementById('file-upload-input');
-    if (!uploadBtn || !fileInput) return;
-
-    uploadBtn.addEventListener('click', function () {
-      fileInput.click();
-    });
-
-    fileInput.addEventListener('change', function () {
-      if (!fileInput.files || fileInput.files.length === 0) return;
-      var file = fileInput.files[0];
-      if (!utils.isAllowedFileType(file.name)) {
-        showToast('Type de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, XLS, XLSX.', 'error');
-        fileInput.value = '';
-        return;
-      }
-      showToast('Fichier "' + utils.sanitizeInput(file.name) + '" sélectionné (' + utils.formatFileSize(file.size) + ').', 'success');
     });
   }
 
@@ -140,7 +86,6 @@
     initMobileMenu();
     initSearch();
     initModal();
-    initFileUpload();
     initNotifications();
   }
 
@@ -157,7 +102,6 @@
       initMobileMenu: initMobileMenu,
       initSearch: initSearch,
       initModal: initModal,
-      initFileUpload: initFileUpload,
       initNotifications: initNotifications,
       showToast: showToast,
       init: init,

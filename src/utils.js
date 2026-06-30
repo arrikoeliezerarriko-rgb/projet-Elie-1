@@ -163,24 +163,30 @@ function parseDocumentRows(tbody) {
   return documents;
 }
 
+var PortailUtils = {
+  ALLOWED_EXTENSIONS: ALLOWED_EXTENSIONS,
+  MAX_FILE_SIZE: MAX_FILE_SIZE,
+  getFileExtension: getFileExtension,
+  isAllowedFileType: isAllowedFileType,
+  getFileBadgeType: getFileBadgeType,
+  formatFileSize: formatFileSize,
+  formatDate: formatDate,
+  sanitizeInput: sanitizeInput,
+  normalizeText: normalizeText,
+  filterDocuments: filterDocuments,
+  filterByType: filterByType,
+  validateLoginForm: validateLoginForm,
+  validateEmail: validateEmail,
+  validateDocumentForm: validateDocumentForm,
+  debounce: debounce,
+  truncateText: truncateText,
+  parseDocumentRows: parseDocumentRows,
+};
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    ALLOWED_EXTENSIONS: ALLOWED_EXTENSIONS,
-    MAX_FILE_SIZE: MAX_FILE_SIZE,
-    getFileExtension: getFileExtension,
-    isAllowedFileType: isAllowedFileType,
-    getFileBadgeType: getFileBadgeType,
-    formatFileSize: formatFileSize,
-    formatDate: formatDate,
-    sanitizeInput: sanitizeInput,
-    normalizeText: normalizeText,
-    filterDocuments: filterDocuments,
-    filterByType: filterByType,
-    validateLoginForm: validateLoginForm,
-    validateEmail: validateEmail,
-    validateDocumentForm: validateDocumentForm,
-    debounce: debounce,
-    truncateText: truncateText,
-    parseDocumentRows: parseDocumentRows,
-  };
+  module.exports = PortailUtils;
+}
+
+if (typeof window !== 'undefined') {
+  window.PortailUtils = PortailUtils;
 }

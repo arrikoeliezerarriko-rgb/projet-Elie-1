@@ -46,19 +46,16 @@ function setUpIndexHTML() {
             <div class="modal-header">
               <button class="icon-button modal-close-button" type="button">×</button>
             </div>
-            <form class="login-form">
-              <label><input type="email" placeholder="delegue@universite.edu" /></label>
-              <label><input type="password" placeholder="••••••••" /></label>
-              <button class="primary-button" type="button" id="delegate-submit-button">Se connecter</button>
-            </form>
+            <div class="contact-info">
+              <p><strong>Délégué principal :</strong> Delphine A.</p>
+              <p>Pour toute demande, contactez le délégué via l'espace sécurisé.</p>
+              <a class="primary-button full-width" href="espace-delegue.html">Accéder à l'espace délégué</a>
+            </div>
           </div>
         </div>
 
-        <button class="secondary-button" id="upload-trigger-button">Téléverser</button>
-        <input id="file-upload-input" class="visually-hidden" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" />
         <div class="toast" id="toast" aria-live="polite"></div>
-        <button class="primary-button" id="help-contact-button">Contacter</button>
-        <a href="espace-delegue.html">Espace Délégué</a>
+        <button class="primary-button" id="help-contact-button">Contacter le délégué</button>
       </div>
     </div>
   `;
@@ -176,90 +173,6 @@ describe('initModal', () => {
     helpBtn.click();
     card.click();
     expect(modal.getAttribute('aria-hidden')).toBe('false');
-  });
-
-  test('opens modal when delegate link is clicked', () => {
-    const modal = document.getElementById('delegate-modal');
-    const link = document.querySelector('a[href="espace-delegue.html"]');
-
-    link.click();
-    expect(modal.classList.contains('visible')).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Login submit
-// ---------------------------------------------------------------------------
-describe('delegate login submit', () => {
-  test('shows error toast for invalid email', () => {
-    const submitBtn = document.getElementById('delegate-submit-button');
-    const emailInput = document.querySelector('input[type="email"]');
-    const toast = document.getElementById('toast');
-
-    emailInput.value = 'not-an-email';
-    submitBtn.click();
-
-    expect(toast.textContent).toMatch(/adresse e-mail/i);
-    expect(toast.classList.contains('error')).toBe(true);
-  });
-
-  test('shows error toast for empty password', () => {
-    const submitBtn = document.getElementById('delegate-submit-button');
-    const emailInput = document.querySelector('input[type="email"]');
-    const passwordInput = document.querySelector('input[type="password"]');
-    const toast = document.getElementById('toast');
-
-    emailInput.value = 'test@test.com';
-    passwordInput.value = '';
-    submitBtn.click();
-
-    expect(toast.textContent).toMatch(/mot de passe/i);
-  });
-
-  test('shows success toast for valid credentials', () => {
-    const submitBtn = document.getElementById('delegate-submit-button');
-    const emailInput = document.querySelector('input[type="email"]');
-    const passwordInput = document.querySelector('input[type="password"]');
-    const toast = document.getElementById('toast');
-
-    emailInput.value = 'test@test.com';
-    passwordInput.value = 'admin1234';
-    submitBtn.click();
-
-    expect(toast.textContent).toMatch(/succès/i);
-    expect(toast.classList.contains('success')).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// File upload
-// ---------------------------------------------------------------------------
-describe('initFileUpload', () => {
-  test('shows error toast for disallowed file type', () => {
-    const fileInput = document.getElementById('file-upload-input');
-    const toast = document.getElementById('toast');
-
-    Object.defineProperty(fileInput, 'files', {
-      value: [{ name: 'image.png', size: 1024 }],
-      writable: false,
-    });
-    fileInput.dispatchEvent(new Event('change'));
-
-    expect(toast.textContent).toMatch(/non autorisé/i);
-  });
-
-  test('shows success toast for allowed file type', () => {
-    const fileInput = document.getElementById('file-upload-input');
-    const toast = document.getElementById('toast');
-
-    Object.defineProperty(fileInput, 'files', {
-      value: [{ name: 'doc.pdf', size: 2048 }],
-      writable: false,
-    });
-    fileInput.dispatchEvent(new Event('change'));
-
-    expect(toast.textContent).toMatch(/doc\.pdf/);
-    expect(toast.classList.contains('success')).toBe(true);
   });
 });
 

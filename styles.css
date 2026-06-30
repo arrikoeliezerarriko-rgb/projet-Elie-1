@@ -662,16 +662,21 @@ tbody tr:hover {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.toast.visible {
+.toast.show {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
-.toast[data-tone="success"] {
+.toast.success {
   background: linear-gradient(135deg, #0f7a4f, #0f5e44);
 }
 
-.toast[data-tone="info"] {
+.toast.error {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.toast.info {
   background: linear-gradient(135deg, #0f1d36, #122544);
 }
 
@@ -689,6 +694,7 @@ tbody tr:hover {
   z-index: 70;
 }
 
+.modal-overlay.visible,
 .modal-overlay.open {
   opacity: 1;
   pointer-events: auto;
@@ -705,6 +711,7 @@ tbody tr:hover {
   transition: transform 0.22s ease;
 }
 
+.modal-overlay.visible .modal-card,
 .modal-overlay.open .modal-card {
   transform: translateY(0) scale(1);
 }
@@ -802,6 +809,21 @@ tbody tr:hover {
 
 body.modal-open {
   overflow: hidden;
+}
+
+.contact-info {
+  display: grid;
+  gap: 14px;
+}
+
+.contact-info p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.contact-info strong {
+  color: var(--text);
 }
 
 .text-button,

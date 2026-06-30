@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script defer src="src/utils.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -37,12 +38,12 @@
           <h3>Espace Délégué</h3>
           <p>Connexion, téléversement et gestion des fichiers de la promotion.</p>
         </div>
-        <a class="primary-button full-width" href="espace-delegue.html">Ouvrir l'espace</a>
+        <a class="primary-button full-width" href="espace-delegue.html">Accéder à l'espace</a>
       </div>
 
       <div class="sidebar-footer">
         <p>Promotion 2026-2027</p>
-        <span> UCAO • departement du droit </span>
+        <span>UCAO &bull; Département Informatique</span>
       </div>
     </aside>
 
@@ -55,7 +56,7 @@
         </button>
 
         <div class="topbar-brand">
-          <p class="eyebrow">Licence 2 droit </p>
+          <p class="eyebrow">Licence 1 Informatique</p>
           <h1>PORTAIL DES COURS</h1>
         </div>
 
@@ -87,8 +88,7 @@
             <p class="hero-text">Téléchargez facilement les cours, TD,et autres documents partagés par le délégué.</p>
 
             <div class="hero-actions">
-              <a class="primary-button" href="espace-delegue.html">Connexion du délégué</a>
-              <button class="secondary-button" id="upload-trigger-button">Téléverser un fichier</button>
+              <a class="primary-button" href="espace-delegue.html">Espace délégué</a>
             </div>
 
             <div class="hero-features">
@@ -365,32 +365,14 @@
 
           <p class="modal-description">Accédez à l’espace d’administration pour publier des fichiers, organiser les cours et suivre les téléchargements.</p>
 
-          <form class="login-form">
-            <label>
-              <span>Adresse e-mail</span>
-              <input type="email" placeholder="delegue@universite.edu" />
-            </label>
-            <label>
-              <span>Mot de passe</span>
-              <input type="password" placeholder="••••••••" />
-            </label>
-            <div class="login-form-row">
-              <label class="checkbox-field">
-                <input type="checkbox" />
-                <span>Rester connecté</span>
-              </label>
-              <a href="#contact">Mot de passe oublié ?</a>
-            </div>
-            <button class="primary-button full-width" type="button" id="delegate-submit-button">Se connecter</button>
-          </form>
-
-          <div class="modal-footnote">
-            <span>Connexion simulée pour la maquette UI/UX.</span>
+          <div class="contact-info">
+            <p><strong>Délégué principal :</strong> Delphine A.</p>
+            <p>Pour toute demande concernant un document manquant, une correction ou une mise à jour, veuillez contacter le délégué via l'espace sécurisé.</p>
+            <a class="primary-button full-width" href="espace-delegue.html">Accéder à l'espace délégué</a>
           </div>
         </div>
       </div>
 
-        <input id="file-upload-input" class="visually-hidden" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" />
         <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
     </div>
     </div>
