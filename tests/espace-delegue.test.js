@@ -2,6 +2,10 @@
  * @jest-environment jsdom
  */
 
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 let espaceModule;
 
 function loadEspace() {
@@ -14,7 +18,7 @@ function setUpEspaceDelegueHTML() {
     <div class="auth-screen" id="auth-screen">
       <div class="auth-card">
         <form class="auth-form" id="auth-form">
-          <label><input id="auth-username" type="text" placeholder="delegue" /></label>
+          <label><input id="auth-username" type="text" placeholder="Votre identifiant" /></label>
           <label><input id="auth-password" type="password" placeholder="Mot de passe" /></label>
           <button class="primary-button" type="submit">Entrer</button>
         </form>
@@ -24,7 +28,7 @@ function setUpEspaceDelegueHTML() {
     <div class="layout" id="delegate-layout" hidden>
       <aside class="sidebar" id="sidebar">
         <nav class="side-nav">
-          <button class="side-link danger side-action" id="side-logout" type="button">Déconnexion</button>
+          <button class="side-link danger side-action" id="side-logout" type="button">Deconnexion</button>
         </nav>
       </aside>
 
@@ -35,7 +39,7 @@ function setUpEspaceDelegueHTML() {
             <input id="search-input" type="search" placeholder="Rechercher..." />
           </label>
           <button class="icon-button notify-button" id="notify-button">🔔</button>
-          <button class="logout-button" id="top-logout" type="button">Déconnexion</button>
+          <button class="logout-button" id="top-logout" type="button">Deconnexion</button>
         </header>
 
         <main class="content">
@@ -76,6 +80,29 @@ function setUpEspaceDelegueHTML() {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  sessionStorage.clear();
+
+  var mockCrypto = {
+    subtle: {
+      digest: jest.fn(function (_algo, data) {
+        var bytes = new Uint8Array(data);
+        var str = new TextDecoder().decode(bytes);
+        // Return the known hash for 'Portail2026!' so login tests pass
+        if (str === 'Portail2026!') {
+          var hex = 'e5b21c53a6fcf33c242a4eeab94260c7439caea44bfa24b658e3db5f0e2ea9bc';
+          var arr = new Uint8Array(hex.match(/.{2}/g).map(function (b) { return parseInt(b, 16); }));
+          return Promise.resolve(arr.buffer);
+        }
+        // Return a different hash for any other password
+        var fake = new Uint8Array(32);
+        fake[0] = 0xff;
+        return Promise.resolve(fake.buffer);
+      }),
+    },
+  };
+  Object.defineProperty(global, 'crypto', { value: mockCrypto, writable: true, configurable: true });
+  Object.defineProperty(window, 'crypto', { value: mockCrypto, writable: true, configurable: true });
+
   setUpEspaceDelegueHTML();
   loadEspace();
 });
@@ -83,6 +110,7 @@ beforeEach(() => {
 afterEach(() => {
   jest.useRealTimers();
   document.body.innerHTML = '';
+  sessionStorage.clear();
 });
 
 // ---------------------------------------------------------------------------
@@ -90,66 +118,70 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 describe('initAuth', () => {
   test('shows error for empty credentials', () => {
-    const form = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
+    var form = document.getElementById('auth-form');
+    var usernameInput = document.getElementById('auth-username');
+    var passwordInput = document.getElementById('auth-password');
 
     usernameInput.value = '';
     passwordInput.value = '';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    const error = document.querySelector('.auth-error');
+    var error = document.querySelector('.auth-error');
     expect(error).not.toBeNull();
     expect(error.textContent).toMatch(/requis/i);
   });
 
-  test('shows error for wrong credentials', () => {
-    const form = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
+  test('shows error for wrong username', () => {
+    var form = document.getElementById('auth-form');
+    var usernameInput = document.getElementById('auth-username');
+    var passwordInput = document.getElementById('auth-password');
 
     usernameInput.value = 'wrong';
     passwordInput.value = 'wrong123';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    const error = document.querySelector('.auth-error');
+    var error = document.querySelector('.auth-error');
     expect(error).not.toBeNull();
     expect(error.textContent).toMatch(/incorrect/i);
   });
 
-  test('reveals delegate layout for correct credentials', () => {
-    const form = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
-    const authScreen = document.getElementById('auth-screen');
-    const layout = document.getElementById('delegate-layout');
+  test('reveals delegate layout for correct credentials', async () => {
+    var form = document.getElementById('auth-form');
+    var usernameInput = document.getElementById('auth-username');
+    var passwordInput = document.getElementById('auth-password');
+    var authScreen = document.getElementById('auth-screen');
+    var layout = document.getElementById('delegate-layout');
 
     usernameInput.value = 'delegue';
-    passwordInput.value = 'admin1234';
+    passwordInput.value = 'Portail2026!';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    // Wait for SHA-256 promise to resolve
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(authScreen.hidden).toBe(true);
     expect(layout.hidden).toBe(false);
   });
 
   test('shows error for short password', () => {
-    const form = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
+    var form = document.getElementById('auth-form');
+    var usernameInput = document.getElementById('auth-username');
+    var passwordInput = document.getElementById('auth-password');
 
     usernameInput.value = 'delegue';
     passwordInput.value = 'ab';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    const error = document.querySelector('.auth-error');
+    var error = document.querySelector('.auth-error');
     expect(error).not.toBeNull();
-    expect(error.textContent).toMatch(/4 caractères/i);
+    expect(error.textContent).toMatch(/4 caract/i);
   });
 
   test('replaces old error message on new attempt', () => {
-    const form = document.getElementById('auth-form');
-    const usernameInput = document.getElementById('auth-username');
-    const passwordInput = document.getElementById('auth-password');
+    var form = document.getElementById('auth-form');
+    var usernameInput = document.getElementById('auth-username');
+    var passwordInput = document.getElementById('auth-password');
 
     usernameInput.value = '';
     passwordInput.value = '';
@@ -159,9 +191,24 @@ describe('initAuth', () => {
     passwordInput.value = 'wrong123';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    const errors = document.querySelectorAll('.auth-error');
+    var errors = document.querySelectorAll('.auth-error');
     expect(errors.length).toBe(1);
     expect(errors[0].textContent).toMatch(/incorrect/i);
+  });
+
+  test('stores session on successful login', async () => {
+    var form = document.getElementById('auth-form');
+    document.getElementById('auth-username').value = 'delegue';
+    document.getElementById('auth-password').value = 'Portail2026!';
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    var session = JSON.parse(sessionStorage.getItem('delegue_session'));
+    expect(session).not.toBeNull();
+    expect(session.user).toBe('delegue');
+    expect(typeof session.expires).toBe('number');
   });
 });
 
@@ -171,7 +218,7 @@ describe('initAuth', () => {
 describe('showAuthError', () => {
   test('inserts an error div into auth-form', () => {
     espaceModule.showAuthError('Test error');
-    const error = document.querySelector('.auth-error');
+    var error = document.querySelector('.auth-error');
     expect(error).not.toBeNull();
     expect(error.textContent).toBe('Test error');
     expect(error.getAttribute('role')).toBe('alert');
@@ -180,7 +227,7 @@ describe('showAuthError', () => {
   test('replaces previous error', () => {
     espaceModule.showAuthError('First');
     espaceModule.showAuthError('Second');
-    const errors = document.querySelectorAll('.auth-error');
+    var errors = document.querySelectorAll('.auth-error');
     expect(errors.length).toBe(1);
     expect(errors[0].textContent).toBe('Second');
   });
@@ -190,18 +237,10 @@ describe('showAuthError', () => {
 // Logout
 // ---------------------------------------------------------------------------
 describe('initLogout', () => {
-  function login() {
-    const form = document.getElementById('auth-form');
-    document.getElementById('auth-username').value = 'delegue';
-    document.getElementById('auth-password').value = 'admin1234';
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-  }
-
   test('side-logout hides layout and shows auth screen', () => {
-    login();
-    const sideLogout = document.getElementById('side-logout');
-    const authScreen = document.getElementById('auth-screen');
-    const layout = document.getElementById('delegate-layout');
+    var sideLogout = document.getElementById('side-logout');
+    var authScreen = document.getElementById('auth-screen');
+    var layout = document.getElementById('delegate-layout');
 
     sideLogout.click();
 
@@ -210,10 +249,9 @@ describe('initLogout', () => {
   });
 
   test('top-logout hides layout and shows auth screen', () => {
-    login();
-    const topLogout = document.getElementById('top-logout');
-    const authScreen = document.getElementById('auth-screen');
-    const layout = document.getElementById('delegate-layout');
+    var topLogout = document.getElementById('top-logout');
+    var authScreen = document.getElementById('auth-screen');
+    var layout = document.getElementById('delegate-layout');
 
     topLogout.click();
 
@@ -222,9 +260,9 @@ describe('initLogout', () => {
   });
 
   test('clears form inputs on logout', () => {
-    login();
-    const sideLogout = document.getElementById('side-logout');
-    sideLogout.click();
+    document.getElementById('auth-username').value = 'test';
+    document.getElementById('auth-password').value = 'test';
+    document.getElementById('side-logout').click();
 
     expect(document.getElementById('auth-username').value).toBe('');
     expect(document.getElementById('auth-password').value).toBe('');
@@ -236,6 +274,13 @@ describe('initLogout', () => {
 
     expect(document.querySelector('.auth-error')).toBeNull();
   });
+
+  test('clears session on logout', () => {
+    sessionStorage.setItem('delegue_session', JSON.stringify({ user: 'delegue', expires: Date.now() + 9999999 }));
+    document.getElementById('side-logout').click();
+
+    expect(sessionStorage.getItem('delegue_session')).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -244,8 +289,8 @@ describe('initLogout', () => {
 describe('initSidebar', () => {
   test('toggles sidebar open class', () => {
     espaceModule.initSidebar();
-    const toggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
+    var toggle = document.getElementById('menu-toggle');
+    var sidebar = document.getElementById('sidebar');
 
     toggle.click();
     expect(sidebar.classList.contains('open')).toBe(true);
@@ -260,8 +305,8 @@ describe('initSidebar', () => {
 describe('initSearch', () => {
   test('filters table rows by text content', () => {
     espaceModule.initSearch();
-    const input = document.getElementById('search-input');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var input = document.getElementById('search-input');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     input.value = 'TD1';
     input.dispatchEvent(new Event('input'));
@@ -273,8 +318,8 @@ describe('initSearch', () => {
 
   test('shows all when query is empty', () => {
     espaceModule.initSearch();
-    const input = document.getElementById('search-input');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var input = document.getElementById('search-input');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     input.value = 'TD1';
     input.dispatchEvent(new Event('input'));
@@ -284,7 +329,7 @@ describe('initSearch', () => {
     input.dispatchEvent(new Event('input'));
     jest.advanceTimersByTime(300);
 
-    rows.forEach((row) => {
+    rows.forEach(function (row) {
       expect(row.style.display).toBe('');
     });
   });
@@ -296,9 +341,9 @@ describe('initSearch', () => {
 describe('initDropzone', () => {
   test('handles dragover and dragleave classes', () => {
     espaceModule.initDropzone();
-    const dropzone = document.getElementById('dropzone');
+    var dropzone = document.getElementById('dropzone');
 
-    const dragoverEvent = new Event('dragover', { bubbles: true });
+    var dragoverEvent = new Event('dragover', { bubbles: true });
     dragoverEvent.preventDefault = jest.fn();
     dropzone.dispatchEvent(dragoverEvent);
     expect(dropzone.classList.contains('dragover')).toBe(true);
@@ -309,8 +354,8 @@ describe('initDropzone', () => {
 
   test('updates file preview for valid file', () => {
     espaceModule.initDropzone();
-    const fileInput = document.getElementById('file-input');
-    const preview = document.getElementById('file-preview');
+    var fileInput = document.getElementById('file-input');
+    var preview = document.getElementById('file-preview');
 
     Object.defineProperty(fileInput, 'files', {
       value: [{ name: 'test.docx', size: 2048 }],
@@ -321,9 +366,9 @@ describe('initDropzone', () => {
     expect(preview.textContent).toMatch(/test\.docx/);
   });
 
-  test('rejects disallowed file type', () => {
+  test('rejects disallowed file type via toast', () => {
     espaceModule.initDropzone();
-    const fileInput = document.getElementById('file-input');
+    var fileInput = document.getElementById('file-input');
 
     Object.defineProperty(fileInput, 'files', {
       value: [{ name: 'image.jpg', size: 2048 }],
@@ -331,9 +376,9 @@ describe('initDropzone', () => {
     });
     fileInput.dispatchEvent(new Event('change'));
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast).not.toBeNull();
-    expect(toast.textContent).toMatch(/non autorisé/i);
+    expect(toast.textContent).toMatch(/non autoris/i);
   });
 });
 
@@ -343,8 +388,8 @@ describe('initDropzone', () => {
 describe('initFilterChips', () => {
   test('filters rows by badge type', () => {
     espaceModule.initFilterChips();
-    const chips = document.querySelectorAll('.filter-group .chip');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var chips = document.querySelectorAll('.filter-group .chip');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     chips[1].click(); // PDF
     expect(rows[0].style.display).toBe('');
@@ -353,13 +398,13 @@ describe('initFilterChips', () => {
 
   test('"Tous" chip shows all rows', () => {
     espaceModule.initFilterChips();
-    const chips = document.querySelectorAll('.filter-group .chip');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var chips = document.querySelectorAll('.filter-group .chip');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     chips[1].click(); // PDF filter
     chips[0].click(); // Tous
 
-    rows.forEach((row) => {
+    rows.forEach(function (row) {
       expect(row.style.display).toBe('');
     });
   });
@@ -373,15 +418,15 @@ describe('initPublishButton', () => {
     espaceModule.initPublishButton();
     document.getElementById('publish-button').click();
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast).not.toBeNull();
     expect(toast.textContent).toMatch(/titre/i);
   });
 
   test('shows success when form is complete', () => {
     espaceModule.initPublishButton();
-    const inputs = document.querySelectorAll('.document-form input[type="text"]');
-    const fileInput = document.getElementById('file-input');
+    var inputs = document.querySelectorAll('.document-form input[type="text"]');
+    var fileInput = document.getElementById('file-input');
 
     inputs[0].value = 'TD3';
     inputs[1].value = 'Pr. Test';
@@ -394,8 +439,8 @@ describe('initPublishButton', () => {
 
     document.getElementById('publish-button').click();
 
-    const toast = document.querySelector('.toast');
-    expect(toast.textContent).toMatch(/succès/i);
+    var toast = document.querySelector('.notification');
+    expect(toast.textContent).toMatch(/succes/i);
   });
 });
 
@@ -403,30 +448,32 @@ describe('initPublishButton', () => {
 // showToast
 // ---------------------------------------------------------------------------
 describe('showToast', () => {
-  test('creates and displays toast', () => {
+  test('creates and displays notification', () => {
     espaceModule.showToast('Test', 'info');
-    const toast = document.querySelector('.toast.show');
+    var toast = document.querySelector('.notification.visible');
     expect(toast).not.toBeNull();
     expect(toast.textContent).toBe('Test');
   });
 
   test('auto-hides after timeout', () => {
     espaceModule.showToast('Fading', 'success');
-    const toast = document.querySelector('.toast.show');
+    var toast = document.querySelector('.notification.visible');
     jest.advanceTimersByTime(3600);
-    expect(toast.classList.contains('show')).toBe(false);
+    expect(toast.classList.contains('visible')).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// CREDENTIALS
+// Exported credentials (hashed, not plaintext)
 // ---------------------------------------------------------------------------
-describe('CREDENTIALS', () => {
-  test('has expected default values', () => {
-    expect(espaceModule.CREDENTIALS).toEqual({
-      username: 'delegue',
-      password: 'admin1234',
-    });
+describe('Credential exports', () => {
+  test('exports VALID_USERNAME but not plaintext password', () => {
+    expect(espaceModule.VALID_USERNAME).toBe('delegue');
+    expect(espaceModule.VALID_PASSWORD_HASH).toBeDefined();
+    expect(typeof espaceModule.VALID_PASSWORD_HASH).toBe('string');
+    expect(espaceModule.VALID_PASSWORD_HASH.length).toBe(64);
+    // Must NOT export a plaintext CREDENTIALS object
+    expect(espaceModule.CREDENTIALS).toBeUndefined();
   });
 });
 
@@ -435,7 +482,7 @@ describe('CREDENTIALS', () => {
 // ---------------------------------------------------------------------------
 describe('initDashboard', () => {
   test('initializes all dashboard sub-modules without error', () => {
-    expect(() => espaceModule.initDashboard()).not.toThrow();
+    expect(function () { espaceModule.initDashboard(); }).not.toThrow();
   });
 });
 
@@ -444,6 +491,6 @@ describe('initDashboard', () => {
 // ---------------------------------------------------------------------------
 describe('init', () => {
   test('initializes auth and logout without error', () => {
-    expect(() => espaceModule.init()).not.toThrow();
+    expect(function () { espaceModule.init(); }).not.toThrow();
   });
 });

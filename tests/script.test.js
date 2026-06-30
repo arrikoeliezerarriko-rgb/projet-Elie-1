@@ -226,7 +226,7 @@ describe('delegate login submit', () => {
     passwordInput.value = 'admin1234';
     submitBtn.click();
 
-    expect(toast.textContent).toMatch(/succès/i);
+    expect(toast.textContent).toMatch(/succes/i);
     expect(toast.classList.contains('success')).toBe(true);
   });
 });
@@ -245,7 +245,7 @@ describe('initFileUpload', () => {
     });
     fileInput.dispatchEvent(new Event('change'));
 
-    expect(toast.textContent).toMatch(/non autorisé/i);
+    expect(toast.textContent).toMatch(/non autoris/i);
   });
 
   test('shows success toast for allowed file type', () => {

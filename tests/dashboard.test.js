@@ -20,7 +20,7 @@ function setUpDashboardHTML() {
             <input id="search-input" type="search" placeholder="Rechercher..." />
           </label>
           <button class="icon-button notify-button" id="notify-button">🔔<span class="dot"></span></button>
-          <button class="logout-button" id="logout" type="button">Déconnexion</button>
+          <button class="logout-button" id="logout" type="button">Deconnexion</button>
         </header>
 
         <main class="content">
@@ -29,7 +29,7 @@ function setUpDashboardHTML() {
               <form class="document-form">
                 <div class="form-grid">
                   <label><span>Titre</span><input type="text" placeholder="Titre" /></label>
-                  <label><span>Matière</span><select><option>Programmation</option></select></label>
+                  <label><span>Matiere</span><select><option>Programmation</option></select></label>
                   <label><span>Professeur</span><input type="text" placeholder="Professeur" /></label>
                   <label><span>Type</span><select><option>Cours</option></select></label>
                 </div>
@@ -63,7 +63,7 @@ function setUpDashboardHTML() {
                     </tr>
                     <tr>
                       <td><span class="file-badge doc">DOCX</span></td>
-                      <td>Cours - Modèle relationnel</td>
+                      <td>Cours - Modele relationnel</td>
                     </tr>
                     <tr>
                       <td><span class="file-badge xls">XLSX</span></td>
@@ -80,15 +80,44 @@ function setUpDashboardHTML() {
   `;
 }
 
+function setValidSession() {
+  sessionStorage.setItem('delegue_session', JSON.stringify({
+    user: 'delegue',
+    expires: Date.now() + 30 * 60 * 1000,
+  }));
+}
+
 beforeEach(() => {
   jest.useFakeTimers();
+  sessionStorage.clear();
   setUpDashboardHTML();
+  setValidSession();
   loadDashboard();
 });
 
 afterEach(() => {
   jest.useRealTimers();
   document.body.innerHTML = '';
+  sessionStorage.clear();
+});
+
+// ---------------------------------------------------------------------------
+// Auth check
+// ---------------------------------------------------------------------------
+describe('checkAuth', () => {
+  test('returns true when session exists', () => {
+    expect(dashboardModule.checkAuth()).toBe(true);
+  });
+
+  test('redirects when no session exists', () => {
+    sessionStorage.clear();
+    delete window.location;
+    window.location = { replace: jest.fn() };
+
+    var result = dashboardModule.checkAuth();
+    expect(result).toBe(false);
+    expect(window.location.replace).toHaveBeenCalledWith('espace-delegue.html');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -96,8 +125,8 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 describe('initSidebar', () => {
   test('toggles sidebar open class on click', () => {
-    const toggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
+    var toggle = document.getElementById('menu-toggle');
+    var sidebar = document.getElementById('sidebar');
 
     toggle.click();
     expect(sidebar.classList.contains('open')).toBe(true);
@@ -108,7 +137,9 @@ describe('initSidebar', () => {
 
   test('does nothing when elements are missing', () => {
     document.body.innerHTML = '';
-    expect(() => {
+    sessionStorage.clear();
+    setValidSession();
+    expect(function () {
       loadDashboard();
     }).not.toThrow();
   });
@@ -119,8 +150,8 @@ describe('initSidebar', () => {
 // ---------------------------------------------------------------------------
 describe('initSearch', () => {
   test('filters table rows by text content', () => {
-    const input = document.getElementById('search-input');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var input = document.getElementById('search-input');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     input.value = 'Python';
     input.dispatchEvent(new Event('input'));
@@ -132,8 +163,8 @@ describe('initSearch', () => {
   });
 
   test('shows all rows when query is cleared', () => {
-    const input = document.getElementById('search-input');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var input = document.getElementById('search-input');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     input.value = 'Python';
     input.dispatchEvent(new Event('input'));
@@ -143,7 +174,7 @@ describe('initSearch', () => {
     input.dispatchEvent(new Event('input'));
     jest.advanceTimersByTime(300);
 
-    rows.forEach((row) => {
+    rows.forEach(function (row) {
       expect(row.style.display).toBe('');
     });
   });
@@ -154,8 +185,8 @@ describe('initSearch', () => {
 // ---------------------------------------------------------------------------
 describe('initFilterChips', () => {
   test('filters rows when PDF chip is clicked', () => {
-    const chips = document.querySelectorAll('.filter-group .chip');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var chips = document.querySelectorAll('.filter-group .chip');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     chips[1].click(); // PDF
     expect(rows[0].style.display).toBe('');
@@ -164,19 +195,19 @@ describe('initFilterChips', () => {
   });
 
   test('shows all rows when "Tous" chip is clicked', () => {
-    const chips = document.querySelectorAll('.filter-group .chip');
-    const rows = document.querySelectorAll('.table-wrap tbody tr');
+    var chips = document.querySelectorAll('.filter-group .chip');
+    var rows = document.querySelectorAll('.table-wrap tbody tr');
 
     chips[1].click(); // PDF filter
     chips[0].click(); // Tous
 
-    rows.forEach((row) => {
+    rows.forEach(function (row) {
       expect(row.style.display).toBe('');
     });
   });
 
   test('updates active state on chip click', () => {
-    const chips = document.querySelectorAll('.filter-group .chip');
+    var chips = document.querySelectorAll('.filter-group .chip');
 
     chips[2].click(); // DOCX
     expect(chips[0].classList.contains('active')).toBe(false);
@@ -189,9 +220,9 @@ describe('initFilterChips', () => {
 // ---------------------------------------------------------------------------
 describe('initDropzone', () => {
   test('adds dragover class on dragover event', () => {
-    const dropzone = document.getElementById('dropzone');
+    var dropzone = document.getElementById('dropzone');
 
-    const dragoverEvent = new Event('dragover', { bubbles: true });
+    var dragoverEvent = new Event('dragover', { bubbles: true });
     dragoverEvent.preventDefault = jest.fn();
     dropzone.dispatchEvent(dragoverEvent);
 
@@ -199,9 +230,9 @@ describe('initDropzone', () => {
   });
 
   test('removes dragover class on dragleave', () => {
-    const dropzone = document.getElementById('dropzone');
+    var dropzone = document.getElementById('dropzone');
 
-    const dragoverEvent = new Event('dragover', { bubbles: true });
+    var dragoverEvent = new Event('dragover', { bubbles: true });
     dragoverEvent.preventDefault = jest.fn();
     dropzone.dispatchEvent(dragoverEvent);
     dropzone.dispatchEvent(new Event('dragleave'));
@@ -210,8 +241,8 @@ describe('initDropzone', () => {
   });
 
   test('updates preview when a valid file is selected', () => {
-    const fileInput = document.getElementById('file-input');
-    const preview = document.getElementById('file-preview');
+    var fileInput = document.getElementById('file-input');
+    var preview = document.getElementById('file-preview');
 
     Object.defineProperty(fileInput, 'files', {
       value: [{ name: 'report.pdf', size: 5120 }],
@@ -223,7 +254,7 @@ describe('initDropzone', () => {
   });
 
   test('shows error for disallowed file type', () => {
-    const fileInput = document.getElementById('file-input');
+    var fileInput = document.getElementById('file-input');
 
     Object.defineProperty(fileInput, 'files', {
       value: [{ name: 'image.png', size: 5120 }],
@@ -231,9 +262,9 @@ describe('initDropzone', () => {
     });
     fileInput.dispatchEvent(new Event('change'));
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast).not.toBeNull();
-    expect(toast.textContent).toMatch(/non autorisé/i);
+    expect(toast.textContent).toMatch(/non autoris/i);
   });
 });
 
@@ -242,34 +273,34 @@ describe('initDropzone', () => {
 // ---------------------------------------------------------------------------
 describe('initPublishButton', () => {
   test('shows error when title is missing', () => {
-    const publishBtn = document.getElementById('publish-button');
+    var publishBtn = document.getElementById('publish-button');
 
     publishBtn.click();
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast).not.toBeNull();
     expect(toast.textContent).toMatch(/titre/i);
   });
 
   test('shows error when file is missing', () => {
-    const publishBtn = document.getElementById('publish-button');
-    const inputs = document.querySelectorAll('.document-form input[type="text"]');
+    var publishBtn = document.getElementById('publish-button');
+    var inputs = document.querySelectorAll('.document-form input[type="text"]');
     inputs[0].value = 'Test Title';
     inputs[1].value = 'Pr. Test';
 
     publishBtn.click();
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast.textContent).toMatch(/fichier/i);
   });
 
   test('shows success when form is valid', () => {
-    const publishBtn = document.getElementById('publish-button');
-    const inputs = document.querySelectorAll('.document-form input[type="text"]');
-    const fileInput = document.getElementById('file-input');
+    var publishBtn = document.getElementById('publish-button');
+    var inputs = document.querySelectorAll('.document-form input[type="text"]');
+    var fileInput = document.getElementById('file-input');
 
     inputs[0].value = 'TD2 - Tables';
-    inputs[1].value = 'Pr. Kouamé';
+    inputs[1].value = 'Pr. Kouame';
 
     Object.defineProperty(fileInput, 'files', {
       value: [{ name: 'td2.pdf', size: 1024 }],
@@ -279,8 +310,8 @@ describe('initPublishButton', () => {
 
     publishBtn.click();
 
-    const toast = document.querySelector('.toast');
-    expect(toast.textContent).toMatch(/succès/i);
+    var toast = document.querySelector('.notification');
+    expect(toast.textContent).toMatch(/succes/i);
   });
 });
 
@@ -288,13 +319,15 @@ describe('initPublishButton', () => {
 // Logout
 // ---------------------------------------------------------------------------
 describe('initLogout', () => {
-  test('shows deconnexion toast when logout is clicked', () => {
-    const logoutBtn = document.getElementById('logout');
+  test('clears session and redirects when logout is clicked', () => {
+    delete window.location;
+    window.location = { replace: jest.fn() };
 
+    var logoutBtn = document.getElementById('logout');
     logoutBtn.click();
 
-    const toast = document.querySelector('.toast');
-    expect(toast.textContent).toMatch(/déconnexion/i);
+    expect(sessionStorage.getItem('delegue_session')).toBeNull();
+    expect(window.location.replace).toHaveBeenCalledWith('espace-delegue.html');
   });
 });
 
@@ -302,36 +335,34 @@ describe('initLogout', () => {
 // showToast
 // ---------------------------------------------------------------------------
 describe('showToast', () => {
-  test('creates toast if none exists and shows it', () => {
-    document.querySelectorAll('.toast').forEach((t) => t.remove());
+  test('creates notification if none exists and shows it', () => {
+    document.querySelectorAll('.notification').forEach(function (t) { t.remove(); });
 
     dashboardModule.showToast('Hello', 'success');
 
-    const toast = document.querySelector('.toast');
+    var toast = document.querySelector('.notification');
     expect(toast).not.toBeNull();
     expect(toast.textContent).toBe('Hello');
     expect(toast.classList.contains('success')).toBe(true);
-    expect(toast.classList.contains('show')).toBe(true);
+    expect(toast.classList.contains('visible')).toBe(true);
   });
 
-  test('reuses existing toast element', () => {
-    const existing = document.createElement('div');
-    existing.className = 'toast';
+  test('reuses existing notification element', () => {
+    var existing = document.createElement('div');
+    existing.className = 'notification';
     document.body.appendChild(existing);
 
     dashboardModule.showToast('Reused', 'error');
 
-    const toasts = document.querySelectorAll('.toast');
-    expect(toasts.length).toBeGreaterThanOrEqual(1);
-    const toast = document.querySelector('.toast.show');
+    var toast = document.querySelector('.notification.visible');
     expect(toast.textContent).toBe('Reused');
   });
 
-  test('hides toast after timeout', () => {
+  test('hides notification after timeout', () => {
     dashboardModule.showToast('Temp', 'info');
-    const toast = document.querySelector('.toast.show');
+    var toast = document.querySelector('.notification.visible');
     expect(toast).not.toBeNull();
     jest.advanceTimersByTime(3600);
-    expect(toast.classList.contains('show')).toBe(false);
+    expect(toast.classList.contains('visible')).toBe(false);
   });
 });
